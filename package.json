@@ -23,6 +23,7 @@
     "passport-twitter": "~0.1.5",
     "recess": "~1.1.9",
     "uglify-js": "~2.3.6",
-    "watchr": "~2.4.3"
+    "watchr": "~2.4.3",
+    "debug": "~0.7.2"
   }
 }

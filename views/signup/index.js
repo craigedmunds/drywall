@@ -1,4 +1,7 @@
 'use strict';
+var debug = require('debug')('drywall:views:signup:index')
+  , util = require('util')
+  ;
 
 exports.init = function(req, res){
   if (req.isAuthenticated()) { 
@@ -9,7 +12,8 @@ exports.init = function(req, res){
       oauthMessage: '',
       oauthTwitter: !!req.app.get('twitter-oauth-key'),
       oauthGitHub: !!req.app.get('github-oauth-key'),
-      oauthFacebook: !!req.app.get('facebook-oauth-key')
+      oauthFacebook: !!req.app.get('facebook-oauth-key'),
+      oauthEbay: !!req.app.get('ebay-auth-devName')
     });
   }
 };
@@ -195,7 +199,59 @@ exports.signupTwitter = function(req, res, next) {
           oauthMessage: 'We found a user linked to your Twitter account.',
           oauthTwitter: !!req.app.get('twitter-oauth-key'),
           oauthGitHub: !!req.app.get('github-oauth-key'),
-          oauthFacebook: !!req.app.get('facebook-oauth-key')
+          oauthFacebook: !!req.app.get('facebook-oauth-key'),
+          oauthEbay: !!req.app.get('ebay-auth-devName')
+        });
+      }
+    });
+  })(req, res, next);
+};
+
+exports.signupEbay = function(req, res, next) {
+  debug("signupEbay");
+
+  req._passport.instance.authenticate('ebay', function(err, user, info) {
+    
+    debug("signupEbay authenticated, err : %s, user : %s, info : %s", err, user, info);
+  
+    if (!info || !info.profile) {
+      debug("signupEbay no profile found, redirecting to signup");
+      return res.redirect('/signup/');
+    }
+    
+    debug("signupEbay finding user %s", info.profile.username);
+    req.app.db.models.User.findOne({ 'ebay.UserID': info.profile.username }, function(err, user) {
+
+      if (err) {
+        debug("signupEbay find user error %s", err);
+        return next(err);
+      }
+      
+      if (!user) {
+        debug("signupEbay find user no user found");
+
+        req.session.socialProfile = info.profile;
+        res.render('signup/social', { email: info.profile.email });
+      }
+      else {
+        debug("signupEbay user found - login");
+
+        req.login(user, function(err) {
+          if (err) {
+            throw err;
+          }
+
+          debug("signupEbay checking roles to redirect : %s", req.user.roles);
+
+          delete req.session.socialProfile;
+          
+          return res.redirect('/admin/');
+
+          // if (req.user.roles.admin.isMemberOf('root'))
+          //   return res.redirect('/admin/');
+          // else
+          //   return res.redirect('/');
+          
         });
       }
     });
@@ -218,11 +274,12 @@ exports.signupGitHub = function(req, res, next) {
         res.render('signup/social', { email: info.profile.emails[0].value || '' });
       }
       else {
-        res.render('signup/index', {
-          oauthMessage: 'We found a user linked to your GitHub account.',
-          oauthTwitter: !!req.app.get('twitter-oauth-key'),
-          oauthGitHub: !!req.app.get('github-oauth-key'),
-          oauthFacebook: !!req.app.get('facebook-oauth-key')
+        req.login(user, function(err) {
+          if (err) {
+            return next(err);
+          }
+          
+          res.redirect(user.defaultReturnUrl());
         });
       }
     });
@@ -249,7 +306,8 @@ exports.signupFacebook = function(req, res, next) {
           oauthMessage: 'We found a user linked to your Facebook account.',
           oauthTwitter: !!req.app.get('twitter-oauth-key'),
           oauthGitHub: !!req.app.get('github-oauth-key'),
-          oauthFacebook: !!req.app.get('facebook-oauth-key')
+          oauthFacebook: !!req.app.get('facebook-oauth-key'),
+          oauthEbay: !!req.app.get('ebay-auth-devName')
         });
       }
     });
@@ -260,6 +318,7 @@ exports.signupSocial = function(req, res){
   var workflow = req.app.utility.workflow(req, res);
   
   workflow.on('validate', function() {
+    debug("workflow validate");
     if (!req.body.email) {
       workflow.outcome.errfor.email = 'required';
     }
@@ -275,6 +334,7 @@ exports.signupSocial = function(req, res){
   });
   
   workflow.on('duplicateUsernameCheck', function() {
+    debug("workflow duplicateUsernameCheck");
     workflow.username = req.session.socialProfile.username;
     if (!/^[a-zA-Z0-9\-\_]+$/.test(workflow.username)) {
       workflow.username = workflow.username.replace(/[^a-zA-Z0-9\-\_]/g, '');
@@ -297,17 +357,47 @@ exports.signupSocial = function(req, res){
   });
   
   workflow.on('duplicateEmailCheck', function() {
+    debug("workflow duplicateEmailCheck");
     req.app.db.models.User.findOne({ email: req.body.email }, function(err, user) {
       if (err) {
         return workflow.emit('exception', err);
       }
       
       if (user) {
-        workflow.outcome.errfor.email = 'email already registered';
-        return workflow.emit('response');
+        workflow.user = user;
+        // workflow.outcome.errfor.email = 'email already registered';
+        workflow.emit('updateUser');
+      }
+      else {
+        workflow.emit('createUser');
+      }
+    });
+  });
+  
+  workflow.on('updateUser', function() {
+    
+    debug("workflow updateUser req.session.socialProfile.provider : %s, req.session.socialProfile._json %s",
+      req.session.socialProfile.provider, util.inspect(req.session.socialProfile._json));
+
+    var tmpUser = workflow.user;
+
+    var user = {
+      isActive: 'yes',
+      username: tmpUser.username,
+      email: tmpUser.email,
+      search: tmpUser.search
+    };
+
+    user[req.session.socialProfile.provider] = req.session.socialProfile._json;
+    
+    debug("workflow updateUser updating user user %s", util.inspect(user));
+
+    req.app.db.models.User.update({ email: user.email }, user, function(err) {
+      if (err) {
+        return workflow.emit('exception', err);
       }
       
-      workflow.emit('createUser');
+      workflow.emit('logUserIn');
     });
   });
   
@@ -321,8 +411,14 @@ exports.signupSocial = function(req, res){
         req.body.email
       ]
     };
+
+    debug("workflow createUser req.session.socialProfile.provider : %s, req.session.socialProfile._json %s",
+      req.session.socialProfile.provider, util.inspect(req.session.socialProfile._json));
+
     fieldsToSet[req.session.socialProfile.provider] = req.session.socialProfile._json;
     
+    debug("workflow createUser creating user fieldsToSet %s", util.inspect(fieldsToSet));
+
     req.app.db.models.User.create(fieldsToSet, function(err, user) {
       if (err) {
         return workflow.emit('exception', err);
@@ -334,6 +430,8 @@ exports.signupSocial = function(req, res){
   });
   
   workflow.on('createAccount', function() {
+    debug("workflow createAccount req.session.socialProfile : %s", req.session.socialProfile);
+
     var nameParts = req.session.socialProfile.displayName.split(' ');
     var fieldsToSet = {
       isVerified: 'yes',
@@ -367,6 +465,7 @@ exports.signupSocial = function(req, res){
   });
   
   workflow.on('sendWelcomeEmail', function() {
+    debug("workflow sendWelcomeEmail");
     req.app.utility.sendmail(req, res, {
       from: req.app.get('smtp-from-name') +' <'+ req.app.get('smtp-from-address') +'>',
       to: req.body.email,
@@ -390,6 +489,7 @@ exports.signupSocial = function(req, res){
   });
   
   workflow.on('logUserIn', function() {
+    debug("workflow logUserIn");
     req.login(workflow.user, function(err) {
       if (err) {
         return workflow.emit('exception', err);

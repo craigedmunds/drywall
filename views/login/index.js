@@ -10,7 +10,8 @@ exports.init = function(req, res){
       oauthMessage: '',
       oauthTwitter: !!req.app.get('twitter-oauth-key'),
       oauthGitHub: !!req.app.get('github-oauth-key'),
-      oauthFacebook: !!req.app.get('facebook-oauth-key')
+      oauthFacebook: !!req.app.get('facebook-oauth-key'),
+      oauthEbay: !!req.app.get('ebay-auth-devName')
     });
   }
 };
@@ -79,7 +80,8 @@ exports.loginTwitter = function(req, res, next){
           oauthMessage: 'No users found linked to your Twitter account. You may need to create an account first.',
           oauthTwitter: !!req.app.get('twitter-oauth-key'),
           oauthGitHub: !!req.app.get('github-oauth-key'),
-          oauthFacebook: !!req.app.get('facebook-oauth-key')
+          oauthFacebook: !!req.app.get('facebook-oauth-key'),
+          oauthEbay: !!req.app.get('ebay-auth-devName')
         });
       }
       else {
@@ -112,7 +114,8 @@ exports.loginGitHub = function(req, res, next){
           oauthMessage: 'No users found linked to your GitHub account. You may need to create an account first.',
           oauthTwitter: !!req.app.get('twitter-oauth-key'),
           oauthGitHub: !!req.app.get('github-oauth-key'),
-          oauthFacebook: !!req.app.get('facebook-oauth-key')
+          oauthFacebook: !!req.app.get('facebook-oauth-key'),
+          oauthEbay: !!req.app.get('ebay-auth-devName')
         });
       }
       else {
@@ -127,6 +130,41 @@ exports.loginGitHub = function(req, res, next){
     });
   })(req, res, next);
 };
+
+
+// exports.loginEbay = function(req, res, next){
+//   req._passport.instance.authenticate('ebay', function(err, user, info) {
+//     if (!info || !info.profile) {
+//       return res.redirect('/login/');
+//     }
+    
+//     req.app.db.models.User.findOne({ 'ebay.id': info.profile.username }, function(err, user) {
+//       if (err) {
+//         return next(err);
+//       }
+      
+//       if (!user) {
+//         res.render('login/index', {
+//           returnUrl: req.query.returnUrl || '/',
+//           oauthMessage: 'No users found linked to your ebay account. You may need to create an account first.',
+//           oauthTwitter: !!req.app.get('twitter-oauth-key'),
+//           oauthGitHub: !!req.app.get('github-oauth-key'),
+//           oauthFacebook: !!req.app.get('facebook-oauth-key'),
+//           oauthEbay: !!req.app.get('ebay-auth-devName')
+//         });
+//       }
+//       else {
+//         req.login(user, function(err) {
+//           if (err) {
+//             return next(err);
+//           }
+          
+//           res.redirect(user.defaultReturnUrl());
+//         });
+//       }
+//     });
+//   })(req, res, next);
+// };
 
 exports.loginFacebook = function(req, res, next){
   req._passport.instance.authenticate('facebook', { callbackURL: '/login/facebook/callback/' }, function(err, user, info) {
@@ -145,7 +183,8 @@ exports.loginFacebook = function(req, res, next){
           oauthMessage: 'No users found linked to your Facebook account. You may need to create an account first.',
           oauthTwitter: !!req.app.get('twitter-oauth-key'),
           oauthGitHub: !!req.app.get('github-oauth-key'),
-          oauthFacebook: !!req.app.get('facebook-oauth-key')
+          oauthFacebook: !!req.app.get('facebook-oauth-key'),
+          oauthEbay: !!req.app.get('ebay-auth-devName')
         });
       }
       else {

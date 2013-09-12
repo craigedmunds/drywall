@@ -12,7 +12,7 @@ var watchr = require('watchr'),
 var app = {
   process: undefined,
   start: function() {
-    app.process = cp.fork('./app.js');
+    app.process = cp.fork('./app.js', {"--debug" : 5859 });
     console.log('RUN [✔] App started');
     app.process.on('close', function(code, signal) {
       console.log('RUN {!} Attempting to restart app...');

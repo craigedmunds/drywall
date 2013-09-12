@@ -56,7 +56,8 @@ exports.read = function(req, res, next){
       res.send(user);
     }
     else {
-      res.render('admin/users/details', { data: { record: JSON.stringify(user) } });
+      console.log(JSON.stringify(user))
+      res.render('admin/users/details', { data: { record: JSON.stringify(user), ebay: JSON.stringify(user.ebay) } });
     }
   });
 };

@@ -5,15 +5,25 @@ var config = require('./config'),
     express = require('express'),
     mongoStore = require('connect-mongo')(express),
     http = require('http'),
+    https = require('https'),
     path = require('path'),
     passport = require('passport'),
+    fs = require('fs'),
     mongoose = require('mongoose');
 
 //create express app
 var app = express();
 
+console.log("App.js starting up.");
+console.dir(process.env);
+
+var httpsOptions = {
+  key: fs.readFileSync('env/keys/key.pem'),
+  cert: fs.readFileSync('env/keys/cert.pem')
+};;
+
 //setup the web server
-app.server = http.createServer(app);
+app.server = https.createServer(httpsOptions, app);
 
 //setup mongoose
 app.db = mongoose.createConnection(config.mongodb.uri);
@@ -58,6 +68,14 @@ app.configure(function(){
   //facebook settings
   app.set('facebook-oauth-key', config.oauth.facebook.key);
   app.set('facebook-oauth-secret', config.oauth.facebook.secret);
+
+  //ebay settings
+  app.set('ebay-auth-devName', config.oauth.ebay.devName);
+  app.set('ebay-auth-cert', config.oauth.ebay.cert);
+  app.set('ebay-auth-appName', config.oauth.ebay.appName);
+  app.set('ebay-auth-sandbox', config.oauth.ebay.sandbox);
+  app.set('ebay-auth-ownertoken', config.oauth.ebay.ownertoken);
+  app.set('ebay-auth-ruName', config.oauth.ebay.ruName);
   
   //middleware
   app.use(express.favicon(__dirname + '/public/favicon.ico'));

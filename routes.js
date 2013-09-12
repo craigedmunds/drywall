@@ -46,6 +46,8 @@ exports = module.exports = function(app, passport) {
   app.get('/signup/github/callback/', require('./views/signup/index').signupGitHub);
   app.get('/signup/facebook/', passport.authenticate('facebook', { callbackURL: '/signup/facebook/callback/' }));
   app.get('/signup/facebook/callback/', require('./views/signup/index').signupFacebook);
+  app.get('/signup/ebay/', passport.authenticate('ebay', { callbackURL: '/signup/ebay/callback/' }));
+  // app.get('/signup/ebay/callback/', require('./views/signup/index').signupEbay);
   
   //login/out
   app.get('/login/', require('./views/login/index').init);
@@ -64,6 +66,10 @@ exports = module.exports = function(app, passport) {
   app.get('/login/github/callback/', require('./views/login/index').loginGitHub);
   app.get('/login/facebook/', passport.authenticate('facebook', { callbackURL: '/login/facebook/callback/' }));
   app.get('/login/facebook/callback/', require('./views/login/index').loginFacebook);
+  app.get('/login/ebay/', passport.authenticate('ebay', { callbackURL: '/login/ebay/callback/' }));
+  // app.get('/login/ebay/callback/', require('./views/login/index').loginEbay);
+  //TODO : Temporary route while testing, to avoid changing ebay config
+  app.get('/auth/ebay/callback', require('./views/signup/index').signupEbay);
   
   //admin
   app.all('/admin*', ensureAuthenticated);

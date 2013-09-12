@@ -20,7 +20,7 @@ block body
       h1
         a(href='/admin/users/') Users
         |  / <%= username %>
-  
+
   script(type='text/template', id='tmpl-identity')
     fieldset
       legend Identity
@@ -35,6 +35,27 @@ block body
           button.close(type='button', data-dismiss='alert') &times;
           | Changes have been saved.
         |<% } %>
+
+      div.control-group
+        a.btn.btn-disable()
+          i.icon-twitter.icon-large
+          |  Twitter
+      
+        a.btn.btn-disable()
+          i.icon-github.icon-large
+          |  Github
+      
+        a.btn.btn-info()
+          i.icon-github.icon-large
+          |  Ebay
+      
+        a.btn.btn-disable()
+          i.icon-facebook-sign.icon-large
+          |  Facebook
+      div.control-group
+        p
+        | Test data from ebay : #{data.ebay}
+      br
       div.control-group(class!='<%= errfor.isActive ? "has-error" : "" %>')
         label.control-label Is Active:
         select.form-control(name='isActive')
@@ -49,6 +70,8 @@ block body
         label.control-label Email:
         input.form-control(type='text', name='email', value!='<%= email %>')
         span.help-block <%= errfor.email %>
+       div.btn-group.btn-group-justified
+
       div.control-group
         button.btn.btn-primary.btn-update(type='button') Update
   
@@ -90,7 +113,7 @@ block body
             button.btn.btn-success.btn-account-link(type='button') Link
           |<% } %>
         span.help-block <%= errfor.newAccountId %>
-  
+
   script(type='text/template', id='tmpl-password')
     fieldset
       legend Set Password

@@ -31,7 +31,10 @@ block body
             if oauthGitHub
               a.btn.btn-info(href='/login/github/')
                 i.icon-github.icon-large
-                |  GitHub
+            if oauthEbay
+              a.btn.btn-info(href='/login/ebay/')
+                i.icon-github.icon-large
+                |  Ebay
             if oauthFacebook
               a.btn.btn-info(href='/login/facebook/')
                 i.icon-facebook-sign.icon-large

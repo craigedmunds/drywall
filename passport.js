@@ -4,7 +4,8 @@ exports = module.exports = function(app, passport) {
   var LocalStrategy = require('passport-local').Strategy,
       TwitterStrategy = require('passport-twitter').Strategy,
       GitHubStrategy = require('passport-github').Strategy,
-      FacebookStrategy = require('passport-facebook').Strategy;
+      FacebookStrategy = require('passport-facebook').Strategy,
+      EbayStrategy = require('passport-ebay').Strategy;
   
   passport.use(new LocalStrategy(
     function(username, password, done) {
@@ -71,10 +72,26 @@ exports = module.exports = function(app, passport) {
         clientID: app.get('facebook-oauth-key'),
         clientSecret: app.get('facebook-oauth-secret')
       },
-      function(accessToken, refreshToken, profile, done) {
+      function(accessToken, profile, done) {
         done(null, false, {
           accessToken: accessToken,
-          refreshToken: refreshToken,
+          profile: profile
+        });
+      }
+    ));
+  }
+  
+  if (app.get('ebay-auth-devName')) {
+    passport.use(new EbayStrategy({
+        devName: app.get('ebay-devName'),
+        cert: app.get('ebay-cert'),
+        appName: app.get('ebay-appName'),
+        sandbox: app.get('ebay-sandbox'),
+        ownertoken: app.get('ebay-ownertoken')
+      },
+      function(accessToken, profile, done) {
+        done(null, false, {
+          accessToken: accessToken,
           profile: profile
         });
       }
