@@ -245,13 +245,7 @@ exports.signupEbay = function(req, res, next) {
 
           delete req.session.socialProfile;
           
-          return res.redirect('/admin/');
-
-          // if (req.user.roles.admin.isMemberOf('root'))
-          //   return res.redirect('/admin/');
-          // else
-          //   return res.redirect('/');
-          
+          return res.redirect(user.defaultReturnUrl());
         });
       }
     });

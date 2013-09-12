@@ -21,6 +21,7 @@
     "passport-facebook": "~0.1.5",
     "passport-github": "~0.1.5",
     "passport-twitter": "~0.1.5",
+    "passport-ebay" : "git://github.com/craigedmunds/passport-ebay.git",
     "recess": "~1.1.9",
     "uglify-js": "~2.3.6",
     "watchr": "~2.4.3",
